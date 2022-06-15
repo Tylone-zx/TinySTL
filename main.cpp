@@ -1,8 +1,8 @@
 #include <iostream>
-#include "Vector.h"
+#include "Deque.h"
 
 template<class T>
-using Tsl = TinySTL::vector<T>;
+using Tsl = TinySTL::deque<T>;
 
 int main(){
 
