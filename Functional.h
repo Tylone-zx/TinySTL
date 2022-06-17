@@ -2,6 +2,12 @@
 #define _FUNCTIONAL_H_
 
 namespace TinySTL{
+	//********** [unary_function] ****************
+	template <class _Arg, class _Result>
+	struct unary_function {
+		typedef _Arg argument_type;
+		typedef _Result result_type;
+	};
 	//********** [less] ****************
 	template<class T>
 	struct less{
@@ -23,6 +29,11 @@ namespace TinySTL{
 		result_type operator()(const first_argument_type& x, const second_argument_type& y){
 			return x == y;
 		}
+	};
+	//********** [identity] ****************
+	template<class T>
+	struct identity :public unary_function<T, T> {
+		const T& operator()(const T& x) const { return x; }
 	};
 }
 #endif

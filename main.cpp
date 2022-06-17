@@ -1,13 +1,24 @@
 #include <iostream>
-#include "Deque.h"
+#include "RBTree.h"
+#include "Functional.h"
 
-template<class T>
-using Tsl = TinySTL::deque<T>;
+using namespace TinySTL;
+
+rb_tree<int, int, identity<int>, less<int>> itree;
 
 int main(){
 
-	Tsl<int> tsl;
-	for (int i = 1; i <= 5; i++) tsl.push_back(i);
-	for (auto it = tsl.begin(); it != tsl.end(); it++) std::cout << *it << ' ';
+	std::cout << itree.size() << '\n';
+	itree.insert_unique(5);
+	itree.insert_unique(8);
+	itree.insert_unique(47);
+	itree.insert_unique(23);
+	itree.insert_unique(12);
+	itree.insert_unique(9);
+	itree.insert_unique(8);
+	itree.insert_unique(12);
+	itree.insert_unique(11);
+	std::cout << itree.size() << '\n';
+	for (auto it = itree.begin(); it != itree.end(); it++) std::cout << *it << ' ';
 	return 0;
 }

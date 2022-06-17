@@ -4,7 +4,6 @@
 #include "Allocator.h"
 #include "Iterator.h"
 #include "ReverseIterator.h"
-#include "Utility.h"
 
 namespace TinySTL{
 	template<class T, class Alloc = allocator<T>>
