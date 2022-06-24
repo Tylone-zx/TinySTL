@@ -97,7 +97,7 @@ namespace TinySTL {
 		typedef __rb_tree_color_type color_type;
 
 	public:
-		typedef Key key_value;
+		typedef Key key_type;
 		typedef Value value_type;
 		typedef value_type* pointer;
 		typedef const value_type* const_pointer;
@@ -129,7 +129,7 @@ namespace TinySTL {
 			return tmp;
 		}
 
-		void destory_node(link_type p) {
+		void destroy_node(link_type p) {
 			destroy(&p->value_field);
 			put_node(p);
 		}
@@ -175,21 +175,13 @@ namespace TinySTL {
 		iterator __insert(base_ptr x, base_ptr y, const value_type& v);
 		link_type __copy(link_type x, link_type p);
 		void __erase(link_type x);
+		__rb_tree_node_base* __rb_tree_rebalance_for_erase(__rb_tree_node_base* x, __rb_tree_node_base*& root, __rb_tree_node_base*& _leftmost, __rb_tree_node_base*& _rightmost);
 		void init() {
 			header = get_node();
 			color(header) = __rb_tree_red;
 			root() = 0;
 			leftmost() = header;
 			rightmost() = header;
-		}
-		void clear() {
-			if (node_count != 0) {
-				__erase(root());
-				leftmost() = header;
-				root() = 0;
-				rightmost() = header;
-				node_count = 0;
-			}
 		}
 
 	public:
@@ -212,11 +204,33 @@ namespace TinySTL {
 		bool empty() const { return node_count == 0; }
 		size_type size() const { return node_count; }
 		size_type max_size() const { return size_type(-1); }
+		pair<iterator, iterator> equal_range(const key_type& x);
+		pair<const_iterator, const_iterator> equal_range(const key_type& x) const;
+		iterator lower_bound(const key_type& x);
+		const_iterator lower_bound(const key_type& x) const;
+		iterator upper_bound(const key_type& x);
+		const_iterator upper_bound(const key_type& x) const;
 
 	public:
+		void erase(iterator position);
+		size_type erase(const key_type& x);
+		void erase(iterator first, iterator last) {
+			if (first == begin() && last == end()) clear();
+			else
+				while (first != last) erase(first++);
+		}
 		pair<iterator, bool> insert_unique(const value_type& x);
 		iterator insert_equal(const value_type& x);
 		iterator find(const Key& k);
+		void clear() {
+			if (node_count != 0) {
+				__erase(root());
+				leftmost() = header;
+				root() = 0;
+				rightmost() = header;
+				node_count = 0;
+			}
+		}
 	};
 
 	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>

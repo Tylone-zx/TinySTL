@@ -171,7 +171,149 @@ namespace TinySTL {
 
 	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
 	void rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::__erase(link_type x) {
+		while (x != 0) {
+			__erase(right(x));
+			link_type y = left(x);
+			destroy_node(x);
+			x = y;
+		}
+	}
 
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	inline __rb_tree_node_base* rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::__rb_tree_rebalance_for_erase(__rb_tree_node_base* x, __rb_tree_node_base*& root, __rb_tree_node_base*& _leftmost, __rb_tree_node_base*& _rightmost) {
+		__rb_tree_node_base* y = x;
+		__rb_tree_node_base* _x = 0;
+		__rb_tree_node_base* _x_parent = 0;
+		if (y->left == 0)
+			_x = y->right;
+		else if (y->right == 0)
+			_x = y->left;
+		else {
+			y = y->right;
+			while (y->left != 0) y = y->left;
+			_x = y->right;
+		}
+		if (y != x) {
+			x->left->parent = y;
+			y->left = x->left;
+			if (y != x->right) {
+				_x_parent = y->parent;
+				if (_x) _x->parent = y->parent;
+				y->parent->left = _x;
+				y->right = x->right;
+				x->right->parent = y;
+			}
+			else
+				_x_parent = y;
+			if (root == x)
+				root = y;
+			else if (x->parent->left == x)
+				x->parent->left = y;
+			else
+				x->parent->right = y;
+			y->parent = x->parent;
+			TinySTL::swap(y->color, x->color);
+			y = x;
+		}
+		else {
+			_x_parent = y->parent;
+			if (_x) _x->parent = y->parent;
+			if (root == x)
+				root = _x;
+			else if (x->parent->left == x)
+				x->parent->left = _x;
+			else
+				x->parent->right = _x;
+			if (_leftmost == x)
+				if (x->right == 0)
+					_leftmost = x->parent;
+
+				else
+					_leftmost = __rb_tree_node_base::minimum(_x);
+			if (_rightmost == x)
+				if (x->left == 0)
+					_rightmost = x->parent;
+
+				else
+					_rightmost = __rb_tree_node_base::maximum(_x);
+		}
+		if (y->color != __rb_tree_red) {
+			while (_x != root && (_x == 0 || _x->color == __rb_tree_black))
+				if (_x == _x_parent->left) {
+					__rb_tree_node_base* w = _x_parent->right;
+					if (w->color == __rb_tree_red) {
+						w->color = __rb_tree_black;
+						_x_parent->color = __rb_tree_red;
+						__rb_tree_rotate_left(_x_parent, root);
+						w = _x_parent->right;
+					}
+					if ((w->left == 0 || w->left->color == __rb_tree_black) &&
+						(w->right == 0 || w->right->color == __rb_tree_black)) {
+						w->color = __rb_tree_red;
+						_x = _x_parent;
+						_x_parent = _x_parent->parent;
+					}
+					else {
+						if (w->right == 0 || w->right->color == __rb_tree_black) {
+							if (w->left) w->left->color = __rb_tree_black;
+							w->color = __rb_tree_red;
+							__rb_tree_rotate_right(w, root);
+							w = _x_parent->right;
+						}
+						w->color = _x_parent->color;
+						_x_parent->color = __rb_tree_black;
+						if (w->right) w->right->color = __rb_tree_black;
+						__rb_tree_rotate_left(_x_parent, root);
+						break;
+					}
+				}
+				else {
+					__rb_tree_node_base* w = _x_parent->left;
+					if (w->color == __rb_tree_red) {
+						w->color = __rb_tree_black;
+						_x_parent->color = __rb_tree_red;
+						__rb_tree_rotate_right(_x_parent, root);
+						w = _x_parent->left;
+					}
+					if ((w->right == 0 || w->right->color == __rb_tree_black) &&
+						(w->left == 0 || w->left->color == __rb_tree_black)) {
+						w->color = __rb_tree_red;
+						_x = _x_parent;
+						_x_parent = _x_parent->parent;
+					}
+					else {
+						if (w->left == 0 || w->left->color == __rb_tree_black) {
+							if (w->right) w->right->color = __rb_tree_black;
+							w->color = __rb_tree_red;
+							__rb_tree_rotate_left(w, root);
+							w = _x_parent->left;
+						}
+						w->color = _x_parent->color;
+						_x_parent->color = __rb_tree_black;
+						if (w->left) w->left->color = __rb_tree_black;
+						__rb_tree_rotate_right(_x_parent, root);
+						break;
+					}
+				}
+			if (_x) _x->color = __rb_tree_black;
+		}
+		return y;
+	}
+
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	inline void rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::erase(iterator position) {
+		link_type y = (link_type)__rb_tree_rebalance_for_erase(
+			position.node, header->parent, header->left, header->right);
+		destroy_node(y);
+		--node_count;
+	}
+
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::size_type rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::erase(const key_type& x) {
+		pair<iterator, iterator> p = equal_range(x);
+		size_type n = distance(p.first, p.second);
+		erase(p.first, p.second);
+		return n;
 	}
 
 	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
@@ -249,7 +391,72 @@ namespace TinySTL {
 		return j;
 	}
 
-	
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	inline pair<typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator, typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator> rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::equal_range(const key_type& x) {
+		return pair<iterator, iterator>(lower_bound(x), upper_bound(x));
+	}
+
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	inline pair<typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator, typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator> rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::equal_range(const key_type& x) const {
+		return pair<const_iterator, const_iterator>(lower_bound(x), upper_bound(x));
+	}
+
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	inline typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::lower_bound(const key_type& k) {
+		link_type y = header;
+		link_type x = root();
+
+		while (x != 0)
+			if (!key_compare(key(x), k))
+				y = x, x = left(x);
+			else
+				x = right(x);
+
+		return iterator(y);
+	}
+
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	inline typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::lower_bound(const key_type& k) const {
+		link_type y = header;
+		link_type x = root();
+
+		while (x != 0)
+			if (!key_compare(key(x), k))
+				y = x, x = left(x);
+			else
+				x = right(x);
+
+		return const_iterator(y);
+	}
+
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	inline typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::upper_bound(const key_type& k) {
+		link_type y = header;
+		link_type x = root();
+
+		while (x != 0)
+			if (key_compare(k, key(x)))
+				y = x, x = left(x);
+			else
+				x = right(x);
+
+		return iterator(y);
+	}
+
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	inline typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::upper_bound(const key_type& k) const {
+		link_type y = header;
+		link_type x = root();
+
+		while (x != 0)
+			if (key_compare(k, key(x)))
+				y = x, x = left(x);
+			else
+				x = right(x);
+
+		return const_iterator(y);
+	}
+
 }
 
 #endif

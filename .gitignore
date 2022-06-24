@@ -3,6 +3,7 @@
 *.vcxproj
 *.filters
 *.user
+main.cpp
 
 # Prerequisites
 *.d

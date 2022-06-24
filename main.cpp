@@ -20,5 +20,11 @@ int main(){
 	itree.insert_unique(11);
 	std::cout << itree.size() << '\n';
 	for (auto it = itree.begin(); it != itree.end(); it++) std::cout << *it << ' ';
+	std::cout << '\n';
+	itree.erase(5);
+	itree.erase(12);
+	std::cout << itree.size() << '\n';
+	for (auto it = itree.begin(); it != itree.end(); it++) std::cout << *it << ' ';
+	std::cout << '\n';
 	return 0;
 }
