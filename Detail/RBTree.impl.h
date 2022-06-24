@@ -374,6 +374,77 @@ namespace TinySTL {
 	}
 
 	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::insert_unique(iterator position, const value_type& x) {
+		if (position.node == header->left) {
+			if (size() > 0 && key_compare(KeyOfValue()(x), key(position.node)))
+				return __insert(position.node, position.node, x);
+			else
+				return insert_unique(x).first;
+		}
+		else if (position.node == header) {
+			if (key_compare(key(rightmost()), KeyOfValue()(x)))
+				return __insert(0, rightmost(), x);
+			else
+				return insert_unique(x).first;
+		}
+		else {
+			iterator before = position;
+			--before;
+			if (key_compare(key(before.node), KeyOfValue()(x)) &&
+				key_compare(KeyOfValue()(x), key(position.node))) {
+				if (right(before.node) == 0)
+					return __insert(0, before.node, x);
+				else
+					return __insert(position.node, position.node, x);
+			}
+			else
+				return insert_unique(x).first;
+		}
+	}
+
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::insert_equal(iterator position, const value_type& x) {
+		if (position.node == header->left) {
+			if (size() > 0 && !key_compare(key(position.node), KeyOfValue()(x)))
+				return __insert(position.node, position.node, x);
+			else
+				return insert_equal(x);
+		}
+		else if (position.node == header) {
+			if (!key_compare(KeyOfValue()(x), key(rightmost())))
+				return __insert(0, rightmost(), x);
+			else
+				return insert_equal(x);
+		}
+		else {
+			iterator before = position;
+			--before;
+			if (!key_compare(KeyOfValue()(x), key(before.node)) &&
+				!key_compare(key(position.node), KeyOfValue()(x))) {
+				if (right(before.node) == 0)
+					return __insert(0, before.node, x);
+				else
+					return __insert(position.node, position.node, x);
+			}
+			else
+				return insert_equal(x);
+		}
+	}
+
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	template<class InputIterator>
+	inline void rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::insert_unique(InputIterator first, InputIterator last) {
+		for (; first != last; ++first) insert_unique(*first);
+	}
+
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	template<class InputIterator>
+	inline void rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::insert_equal(InputIterator first, InputIterator last) {
+		for (; first != last; ++first) insert_equal(*first);
+	}
+
+
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
 	typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator
 	rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::find(const Key& k) {
 		link_type y = header;

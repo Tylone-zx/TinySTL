@@ -166,7 +166,7 @@ namespace TinySTL {
 
 	public:
 		typedef __rb_tree_iterator<Value, Value&, Value*> iterator;
-		typedef __rb_tree_iterator<const Value, const Value&, const Value*> const_iterator;
+		typedef __rb_tree_iterator<Value, const Value&, const Value*> const_iterator;
 
 	private:
 		void __rb_tree_rotate_left(__rb_tree_node_base* x, __rb_tree_node_base*& root);
@@ -221,6 +221,15 @@ namespace TinySTL {
 		}
 		pair<iterator, bool> insert_unique(const value_type& x);
 		iterator insert_equal(const value_type& x);
+
+		iterator insert_unique(iterator position, const value_type& x);
+		iterator insert_equal(iterator position, const value_type& x);
+
+		template <class InputIterator>
+		void insert_unique(InputIterator first, InputIterator last);
+		template <class InputIterator>
+		void insert_equal(InputIterator first, InputIterator last);
+
 		iterator find(const Key& k);
 		void clear() {
 			if (node_count != 0) {
